@@ -1,0 +1,7 @@
+<h2>All Books</h2>
+
+<% books.forEach(book => { %>
+<div>
+  <a href="/books/<%= book.id %>"> <%= book.title %> </a>
+</div>
+<% }) %>

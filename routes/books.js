@@ -6,7 +6,6 @@ const Book = require("../models/book");
 
 // Function para ma-reuse natin ang code ng form rendering
 const renderNewPage = (res, book, hasError = false) => {
-  // Note: Ginagamit natin ang 'try...catch' dito dahil ang res.render ay puwedeng mag-crash
   try {
     const params = { book: book };
     if (hasError) {
@@ -18,13 +17,13 @@ const renderNewPage = (res, book, hasError = false) => {
   }
 };
 
-// 1. GET /books/new (New Book Form Route)
+// 1. GET /books/new (New Book Form Route)------------------------------------------
 router.get("/new", (req, res) => {
   // 💡 Gumagawa ng BLANKONG Book object para sa form
   renderNewPage(res, new Book());
 });
 
-// 2. POST /books/ (Create Book Route)
+// 2. POST /books/ (Create Book Route)----------------------------------------------
 router.post("/", async (req, res) => {
   const book = new Book({
     title: req.body.title,
@@ -39,9 +38,39 @@ router.post("/", async (req, res) => {
   }
 });
 
-// 3. GET /books/ (Index Route - Existing code mo)
-router.get("/", (req, res) => {
-  res.send("Hello from Book index");
+// 3. GET /books/ (Index Route - Displaying all books)-----------------------------
+router.get("/", async (req, res) => {
+  let books;
+  try {
+    // 💡 Mongoose command: Kunin lahat ng books sa database
+    // Ang .exec() ay optional pero maganda para ma-standardize ang async
+    books = await Book.find().exec();
+
+    // I-render ang view at ipasa ang books
+    res.render("books/index", {
+      books: books, // Ipinapasa ang array ng books
+    });
+  } catch {
+    // Kapag may error sa DB, mag-render na lang ng empty array
+    books = [];
+    res.render("books/index", {
+      books: books,
+    });
+  }
+});
+
+// 4. GET /books/:id (Show Book Details Route)
+router.get("/:id", async (req, res) => {
+  try {
+    // 💡 Mongoose: Kunin ang isang Book gamit ang ID galing sa URL
+    const book = await Book.findById(req.params.id).exec();
+
+    // I-render ang view at ipasa ang isang Book object
+    res.render("books/show", { book: book });
+  } catch {
+    // Kung hindi makita ang ID (404) o may DB error, bumalik sa Index
+    res.redirect("/books");
+  }
 });
 
 module.exports = router;
