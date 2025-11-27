@@ -1,7 +1,40 @@
 <h2>All Books</h2>
 
-<% books.forEach(book => { %>
-<div>
-  <a href="/books/<%= book.id %>"> <%= book.title %> </a>
+<div class="my-4">
+  <a href="/books/new" class="btn btn-success">Add New Book</a>
 </div>
-<% }) %>
+
+<div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
+  <% books.forEach(book => { %>
+
+  <div>
+    <div class="card h-100 shadow-">
+      <% if (book.coverImagePath) { %>
+      <a href="/books/<%= book.id %>">
+        <img
+          src="<%= book.coverImagePath %>"
+          class="card-img-top"
+          alt="<%= book.title %> Cover"
+          style="height: 300px; object-fit: cover"
+        />
+      </a>
+      <% } %>
+
+      <div class="card-body d-flex flex-column">
+        <h5 class="card-title">
+          <a href="/books/<%= book.id %>" class="text-decoration-none"
+            ><%= book.title %></a
+          >
+        </h5>
+
+        <p class="card-text small text-muted mt-auto">
+          Published: <%= book.publishDate ?
+          book.publishDate.toLocaleDateString('en-US', { year: 'numeric', month:
+          'short', day: 'numeric' }) : 'N/A' %>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <% }) %>
+</div>

@@ -7,22 +7,28 @@ if (process.env.NODE_ENV !== "production") {
 const express = require("express");
 const app = express();
 const expressLayouts = require("express-ejs-layouts");
-const mongoose = require("mongoose");
+const methodOverride = require("method-override");
 
-// --- 💡 MIDDLEWARE SETUP ---
+// --- 💡 MIDDLEWARE SETUP -----------------------------------------------------
 app.set("view engine", "ejs");
 app.set("views", __dirname + "/views");
 app.set("layout", "layouts/layout");
 app.use(expressLayouts);
 app.use(express.static("public"));
-
-// Built-in Body Parser: Body parser para sa form data
+app.use(methodOverride("_method"));
 app.use(express.urlencoded({ limit: "10mb", extended: false }));
 
-// --- 🔗 DATABASE CONNECTION ---
+// Para huwag i-cache ang pages (lalo na pag nagba-back)
+app.use((req, res, next) => {
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
+  next();
+});
+
+// --- 🔗 DATABASE CONNECTION ----------------------------------------------------
+const mongoose = require("mongoose");
 const MONGODB_URI = process.env.MONGODB_URI;
 
-// 1. Connection Event Handlers (Para mas malinis ang logging)
+// Connection Event Handlers (Para mas malinis ang logging)
 mongoose.connection.on("connected", () => {
   console.log("MongoDB connected successfully! 🚀");
 });
@@ -43,7 +49,7 @@ const bookRouter = require("./routes/books");
 app.use("/", indexRouter);
 app.use("/books", bookRouter);
 
-// --- ⚙️ SERVER START ---
+// --- ⚙️ SERVER START --------------------------------------------------------
 const PORT = process.env.PORT || 3000;
 
 // Hindi na kailangan ng connectDB().then(() => { ... });
