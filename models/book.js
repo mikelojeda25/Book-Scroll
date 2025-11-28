@@ -1,9 +1,23 @@
 // models/book.js (Ang Dating Code mo)
 const mongoose = require("mongoose");
+const Genre = require("./genre");
 
 const bookSchema = new mongoose.Schema(
   {
     title: {
+      type: String,
+      required: true,
+    },
+    overview: {
+      type: String,
+    },
+    //Genre ID (Referencing)
+    genre: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: "Genre",
+    },
+    author: {
       type: String,
       required: true,
     },
@@ -20,7 +34,6 @@ const bookSchema = new mongoose.Schema(
       required: true,
     },
   },
-
   {
     timestamps: true,
   }

@@ -1,10 +1,52 @@
-<h2>All Books</h2>
-
-<div class="my-4">
-  <a href="/books/new" class="btn btn-success">Add New Book</a>
+<div class="d-flex justify-content-between align-items-center gap-3">
+  <h2>Scroll Book</h2>
+  <div class="my-4">
+    <a href="/books/new" class="btn btn-success">Add New Book</a>
+  </div>
 </div>
 
-<div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
+<form action="/books" method="GET" class="mb-4">
+  <div class="row g-2 align-items-center d-flex">
+    <div class="col-auto">
+      <label for="searchTitle" class="col-form-label">Search</label>
+    </div>
+    <div class="col-md-4">
+      <input
+        type="text"
+        name="title"
+        id="searchTitle"
+        class="form-control"
+        value="<%= locals.searchOptions ? searchOptions.title : '' %>"
+      />
+    </div>
+    <div class="col-auto">
+      <button type="submit" class="btn btn-info text-white">Search</button>
+    </div>
+  </div>
+</form>
+
+<div class="d-flex justify-content-between align-items-center mb-2">
+  <h2>All Books</h2>
+  <div class="btn-group" role="group">
+    <a
+      href="/books?sort=title&dir=asc&title=<%= locals.searchOptions ? searchOptions.title : '' %>"
+      class="btn btn-sm btn-outline-secondary <%= locals.searchOptions && locals.searchOptions.sort === 'title' && locals.searchOptions.dir === 'asc' ? 'active' : '' %>"
+      title="Sort Title A-Z"
+    >
+      Title (A-Z)
+    </a>
+
+    <a
+      href="/books?sort=title&dir=desc&title=<%= locals.searchOptions ? searchOptions.title : '' %>"
+      class="btn btn-sm btn-outline-secondary <%= locals.searchOptions && locals.searchOptions.sort === 'title' && locals.searchOptions.dir === 'desc' ? 'active' : '' %>"
+      title="Sort Title Z-A"
+    >
+      Title (Z-A)
+    </a>
+  </div>
+</div>
+
+<div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
   <% books.forEach(book => { %>
 
   <div>

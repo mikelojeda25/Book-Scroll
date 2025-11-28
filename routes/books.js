@@ -25,42 +25,98 @@ const upload = multer({
 // 💡 HELPER FUNCTIONS (Para sa Reusable Code)
 // ===================================================================
 
-const renderNewPage = (res, book, hasError = false) => {
+const Genre = require("../models/genre"); // 💡 IDAGDAG ITO SA ITAAS
+
+// 💡 NEW/UPDATED HELPER FUNCTION
+const renderNewPage = async (res, book, hasError = false) => {
   try {
-    const params = { book: book };
+    // 💡 KUNIN ANG LAHAT NG GENRES MULA SA DB
+    const genres = await Genre.find({});
+
+    const params = {
+      book: book,
+      genres: genres, // 💡 IPASA ANG GENRES DITO
+    };
+
     if (hasError) {
       params.errorMessage = "Error creating Book. Please check fields.";
     }
     res.render("books/new", params);
-  } catch {
-    // Kung may error sa EJS rendering, pumunta na lang sa Index
+  } catch (err) {
+    console.error(err);
     res.redirect("/books");
   }
 };
 
-const renderEditPage = (res, book, hasError = false) => {
+const renderEditPage = async (res, book, hasError = false) => {
   try {
-    const params = { book: book };
+    // 💡 KUNIN DIN ANG LAHAT NG GENRES PARA SA DROPDOWN
+    const genres = await Genre.find({});
+
+    const params = {
+      book: book,
+      genres: genres,
+    };
+
     if (hasError) {
       params.errorMessage = "Error updating Book. Please check fields.";
     }
     res.render("books/edit", params);
-  } catch {
+  } catch (err) {
+    console.error(err);
     res.redirect("/books");
   }
 };
+
+// 2. GET /books/new (New Book Form Route)
+router.get("/new", async (req, res) => {
+  // 💡 AWAIT ang helper function dahil async na ito
+  await renderNewPage(res, new Book());
+});
 
 // ===================================================================
 // 1. GET /books/ (Index Route - Displaying all books)
 // ===================================================================
 
 router.get("/", async (req, res) => {
+  // 💡 1. Gumawa ng base query object
+  let query = Book.find();
+
+  const searchOptions = {
+    title: req.query.title || "", // Fallback sa empty string
+    sort: req.query.sort || "createdAt", // Default sort field: createdAt
+    dir: req.query.dir || "desc", // Default direction: desc
+  };
+
+  // ===================================
+  // 2. I-handle ang SEARCH (Filtering)
+  // ===================================
+
+  if (searchOptions.title !== "") {
+    // Case-Insensitive Search gamit ang Regular Expression
+    query = query.regex("title", new RegExp(searchOptions.title, "i"));
+  }
+
+  // ===================================
+  // 3. I-handle ang SORTING
+  // ===================================
+
+  const sortOrder = {}; // E.g., { title: 'asc' }
+  sortOrder[searchOptions.sort] = searchOptions.dir;
+  query = query.sort(sortOrder); // I-apply ang sorting
+
   try {
-    const books = await Book.find().exec();
-    res.render("books/index", { books: books });
-  } catch {
-    // Kapag may error sa DB, mag-render na lang ng empty array
-    res.render("books/index", { books: [] });
+    const books = await query.populate("genre").exec();
+
+    // I-render ang view at ipasa ang books at ang searchOptions
+    res.render("books/index", {
+      books: books,
+      searchOptions: searchOptions,
+    });
+  } catch (err) {
+    console.error(err);
+    // Kapag may error sa DB, mag-render ng empty array at walang search options
+    res.render("books/index", { books: [], searchOptions: {} });
   }
 });
 
@@ -86,6 +142,9 @@ router.post("/", upload.single("cover"), async (req, res) => {
   const newBook = new Book({
     title: req.body.title,
     publishDate: publishedDate,
+    overview: req.body.overview,
+    genre: req.body.genre, // Ito ang Genre ID mula sa dropdown
+    author: req.body.author,
   });
 
   // 💡 Cover Image Handling
@@ -127,6 +186,9 @@ router.put("/:id", upload.single("cover"), async (req, res) => {
     book = await Book.findById(req.params.id);
 
     book.title = req.body.title;
+
+    book.overview = req.body.overview;
+    book.genre = req.body.genre;
     book.publishDate = new Date(req.body.publishDate);
 
     // 💡 I-handle ang bagong cover image (optional sa update)
@@ -172,7 +234,7 @@ router.delete("/:id", async (req, res) => {
 
 router.get("/:id", async (req, res) => {
   try {
-    const book = await Book.findById(req.params.id).exec();
+    const book = await Book.findById(req.params.id).populate("genre").exec();
     // 💡 Safety Check: Kung deleted na
     if (book == null) {
       return res.redirect("/books");

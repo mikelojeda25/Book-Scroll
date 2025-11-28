@@ -11,6 +11,44 @@
 </div>
 
 <div class="mb-3">
+    <label for="author" class="form-label">Author Name</label>
+    <input 
+        type="text" 
+        name="author" 
+        id="author" 
+        class="form-control" 
+        value="<%= book.author %>"
+        required
+    >
+</div>
+
+<div class="mb-3">
+    <label for="overview" class="form-label">Overview / Description</label>
+    <textarea 
+        name="overview" 
+        id="overview" 
+        class="form-control" 
+        rows="4"
+    ><%= book.overview %></textarea>
+</div>
+
+<div class="mb-3">
+    <label for="genre" class="form-label">Genre</label>
+    <select name="genre" id="genre" class="form-select" required>
+        <option label="Select Genre" value="" disabled selected></option>
+        <% genres.forEach(genre => { %>
+            <option 
+                value="<%= genre.id %>" 
+                label="<%= genre.name %>"
+                <% if (genre.id.toString() === book.genre?.toString()) { %>
+                    selected
+                <% } %>
+            ></option>
+        <% }) %>
+    </select>
+</div>
+
+<div class="mb-3">
   <label for="publishDate" class="form-label">Published/Created Date</label>
   <input
     type="date"
