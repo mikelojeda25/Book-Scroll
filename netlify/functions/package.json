@@ -1,0 +1,11 @@
+{
+  "name": "netlify-express-functions",
+  "version": "1.0.0",
+  "description": "Dependencies for Netlify Serverless Function",
+  "dependencies": {
+    "express": "^4.18.2",
+    "serverless-http": "^3.2.0",
+    "mongoose": "^8.0.0",
+    "cloudinary": "^1.41.0"
+  }
+}
