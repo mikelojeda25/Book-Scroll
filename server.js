@@ -52,8 +52,12 @@ app.use("/books", bookRouter);
 // --- ⚙️ SERVER START --------------------------------------------------------
 const PORT = process.env.PORT || 3000;
 
-// Hindi na kailangan ng connectDB().then(() => { ... });
-// Diretso na tayong mag-listen!
-app.listen(PORT, () => {
-  console.log(`Express server is running on port ${PORT}`);
-});
+// Kung nasa Local tayo, mag-listen sa port.
+// Kung nasa Netlify (Production), i-export lang ang app.
+if (process.env.NODE_ENV !== "production") {
+  app.listen(PORT, () => {
+    console.log(`Express server is running on port ${PORT}`);
+  });
+}
+
+module.exports = app;
