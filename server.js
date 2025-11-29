@@ -52,12 +52,14 @@ app.use("/books", bookRouter);
 // --- ⚙️ SERVER START --------------------------------------------------------
 const PORT = process.env.PORT || 3000;
 
-// Kung nasa Local tayo, mag-listen sa port.
-// Kung nasa Netlify (Production), i-export lang ang app.
+// 💡 1. Balutin ang app.listen sa condition
+// Ito ay para hindi mag-error ang Netlify na "Port already in use"
 if (process.env.NODE_ENV !== "production") {
   app.listen(PORT, () => {
     console.log(`Express server is running on port ${PORT}`);
   });
 }
 
+// 💡 2. IMPORTANTE: I-export ang app!
+// Ito ang kailangan ng 'serverless-http' para gumana.
 module.exports = app;
