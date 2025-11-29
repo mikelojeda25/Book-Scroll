@@ -24,7 +24,8 @@ const connectToDatabase = async () => {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       ssl: true,
-      sslValidate: false, // <--- DITO ANG FIX, nasa loob na ng {}
+      sslValidate: false,
+      serverSelectionTimeoutMS: 5000,
     });
 
     // 4. I-cache ang connection object
