@@ -1,11 +1,10 @@
 const serverless = require("serverless-http");
 const mongoose = require("mongoose");
 
-// Tiyaking tama ang path na ito para ituro sa main Express app file mo (server.js)
+// Tiyakin na ang path na ito ay tama para makuha ang iyong Express app
 const app = require("../server");
 
-// 💡 DITO NANGYAYARI ANG MAGIC: Cache ang DB connection
-// Gagamitin ang global variable para mag-cache ng connection sa pagitan ng Serverless calls
+// Variable para i-cache ang database connection
 let cachedDb = null;
 
 const connectToDatabase = async () => {
@@ -20,10 +19,12 @@ const connectToDatabase = async () => {
 
   try {
     // 3. I-connect sa MongoDB
-    // Tiyakin na ang connection options ay tama
+    // ✅ TAMANG PWESTO: Nilagay ang SSL fix sa loob ng options object
     const db = await mongoose.connect(dbUrl, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      ssl: true,
+      sslValidate: false, // <--- DITO ANG FIX, nasa loob na ng {}
     });
 
     // 4. I-cache ang connection object
@@ -31,12 +32,14 @@ const connectToDatabase = async () => {
     console.log("New MongoDB connection established and cached.");
     return db;
   } catch (err) {
-    console.error("MongoDB Connection Failed:", err.message);
-    throw new Error("Failed to connect to database. Check MONGODB_URI.");
+    // Mag-log ng detalyadong error message
+    console.error(`MongoDB Connection Failed: ${err.message}`);
+    throw new Error(
+      "Failed to connect to database. Check MONGODB_URI or SSL settings."
+    );
   }
 };
 
-// 💡 HANDLER FUNCTION: Ito ang entry point para sa Netlify Function
 exports.handler = async (event, context) => {
   // Tiyakin na ang Node.js event loop ay maghihintay bago mag-exit (para sa connection caching)
   context.callbackWaitsForEmptyEventLoop = false;
