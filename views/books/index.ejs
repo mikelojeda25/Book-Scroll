@@ -1,30 +1,22 @@
-<div class="d-flex justify-content-between align-items-center gap-3">
-  <h2>Scroll Book</h2>
-  <div class="my-4">
-    <a href="/books/new" class="btn btn-success">Add New Book</a>
-  </div>
-</div>
+<form action="/books" method="GET" class="mb-4 d-flex w-100">
+  <div class="d-flex align-items-center w-100">
+    <label for="searchTitle" class="col-form-label me-3">Search</label>
 
-<form action="/books" method="GET" class="mb-4">
-  <div class="row g-2 align-items-center d-flex">
-    <div class="col-auto">
-      <label for="searchTitle" class="col-form-label">Search</label>
-    </div>
-    <div class="col-md-4">
+    <div class="flex-grow-1 me-3">
       <input
         type="text"
         name="title"
         id="searchTitle"
-        class="form-control"
+        class="form-control w-100"
         value="<%= locals.searchOptions ? searchOptions.title : '' %>"
       />
     </div>
-    <div class="col-auto">
+
+    <div>
       <button type="submit" class="btn btn-info text-white">Search</button>
     </div>
   </div>
 </form>
-
 <div class="d-flex justify-content-between align-items-center mb-2">
   <h2>All Books</h2>
   <div class="btn-group" role="group">
@@ -77,6 +69,51 @@
       </div>
     </div>
   </div>
-
   <% }) %>
+</div>
+
+<% const titleParam = locals.searchOptions ? searchOptions.title : ''; const
+sortParam = locals.searchOptions ? searchOptions.sort : ''; const dirParam =
+locals.searchOptions ? searchOptions.dir : ''; const currentPage =
+locals.currentPage || 1; const totalPages = locals.totalPages || 1; const
+totalBooks = locals.totalBooks || 0; const getPaginationLink = (page) => { let
+link = `/books?page=${page}`; if (titleParam) link += `&title=${titleParam}`; if
+(sortParam) link += `&sort=${sortParam}&dir=${dirParam}`; return link; }; %>
+
+<div class="mt-4">
+  <% if (totalPages > 1) { %>
+  <nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
+      <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+        <a
+          class="page-link"
+          href="<%= getPaginationLink(currentPage - 1) %>"
+          aria-label="Previous"
+        >
+          <span aria-hidden="true">&laquo;</span>
+        </a>
+      </li>
+
+      <% const maxPagesToShow = 5; let startPage = Math.max(1, currentPage -
+      Math.floor(maxPagesToShow / 2)); let endPage = Math.min(totalPages,
+      startPage + maxPagesToShow - 1); if (endPage - startPage < maxPagesToShow
+      - 1) { startPage = Math.max(1, endPage - maxPagesToShow + 1); } %> <% for
+      (let i = startPage; i <= endPage; i++) { %>
+      <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+        <a class="page-link" href="<%= getPaginationLink(i) %>"> <%= i %> </a>
+      </li>
+      <% } %>
+
+      <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+        <a
+          class="page-link"
+          href="<%= getPaginationLink(currentPage + 1) %>"
+          aria-label="Next"
+        >
+          <span aria-hidden="true">&raquo;</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+  <% } %>
 </div>

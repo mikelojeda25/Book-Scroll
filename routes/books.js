@@ -1,5 +1,3 @@
-// routes/books.js (FINAL VERSION)
-
 const express = require("express");
 const router = express.Router();
 const Book = require("../models/book");
@@ -25,17 +23,16 @@ const upload = multer({
 // 💡 HELPER FUNCTIONS (Para sa Reusable Code)
 // ===================================================================
 
-const Genre = require("../models/genre"); // 💡 IDAGDAG ITO SA ITAAS
+const Genre = require("../models/genre");
 
 // 💡 NEW/UPDATED HELPER FUNCTION
 const renderNewPage = async (res, book, hasError = false) => {
   try {
-    // 💡 KUNIN ANG LAHAT NG GENRES MULA SA DB
     const genres = await Genre.find({});
 
     const params = {
       book: book,
-      genres: genres, // 💡 IPASA ANG GENRES DITO
+      genres: genres,
     };
 
     if (hasError) {
@@ -50,7 +47,6 @@ const renderNewPage = async (res, book, hasError = false) => {
 
 const renderEditPage = async (res, book, hasError = false) => {
   try {
-    // 💡 KUNIN DIN ANG LAHAT NG GENRES PARA SA DROPDOWN
     const genres = await Genre.find({});
 
     const params = {
@@ -70,7 +66,6 @@ const renderEditPage = async (res, book, hasError = false) => {
 
 // 2. GET /books/new (New Book Form Route)
 router.get("/new", async (req, res) => {
-  // 💡 AWAIT ang helper function dahil async na ito
   await renderNewPage(res, new Book());
 });
 
@@ -82,50 +77,62 @@ router.get("/", async (req, res) => {
   // 💡 1. Gumawa ng base query object
   let query = Book.find();
 
+  const perPage = 10; // 🔑 Ilang books per page
+  const page = parseInt(req.query.page) || 1; // 🔑 Current page (Default is 1)
+
   const searchOptions = {
-    title: req.query.title || "", // Fallback sa empty string
-    sort: req.query.sort || "createdAt", // Default sort field: createdAt
-    dir: req.query.dir || "desc", // Default direction: desc
+    title: req.query.title || "",
+    sort: req.query.sort || "createdAt",
+    dir: req.query.dir || "desc",
   };
 
   // ===================================
-  // 2. I-handle ang SEARCH (Filtering)
+  // 2. SEARCH (Filtering)
   // ===================================
-
   if (searchOptions.title !== "") {
-    // Case-Insensitive Search gamit ang Regular Expression
     query = query.regex("title", new RegExp(searchOptions.title, "i"));
   }
 
   // ===================================
-  // 3. I-handle ang SORTING
+  // 3. SORTING
   // ===================================
-
-  const sortOrder = {}; // E.g., { title: 'asc' }
+  const sortOrder = {};
   sortOrder[searchOptions.sort] = searchOptions.dir;
-  query = query.sort(sortOrder); // I-apply ang sorting
+  query = query.sort(sortOrder);
 
+  // ===================================
+  // 4. PAGINATION EXECUTION
+  // ===================================
   try {
-    const books = await query.populate("genre").exec();
+    const count = await Book.countDocuments(query.getFilter());
+    const totalPages = Math.ceil(count / perPage);
 
-    // I-render ang view at ipasa ang books at ang searchOptions
+    // 🔑 I-apply ang pagination (SKIP at LIMIT)
+    const books = await query
+      .populate("genre")
+      .limit(perPage)
+      .skip((page - 1) * perPage)
+      .exec();
+
     res.render("books/index", {
       books: books,
       searchOptions: searchOptions,
+      // 🔑 PAGINATION DATA
+      currentPage: page,
+      totalPages: totalPages,
+      perPage: perPage,
+      totalBooks: count,
     });
   } catch (err) {
     console.error(err);
-    // Kapag may error sa DB, mag-render ng empty array at walang search options
     res.render("books/index", { books: [], searchOptions: {} });
   }
 });
-
 // ===================================================================
 // 2. GET /books/new (New Book Form Route)
 // ===================================================================
 
 router.get("/new", (req, res) => {
-  // 💡 Gumagawa ng BLANKONG Book object para sa form
   renderNewPage(res, new Book());
 });
 
@@ -134,7 +141,6 @@ router.get("/new", (req, res) => {
 // ===================================================================
 
 router.post("/", upload.single("cover"), async (req, res) => {
-  // 💡 Tiyakin na may fallback value para sa date
   const publishedDate = req.body.publishDate
     ? new Date(req.body.publishDate)
     : new Date();
@@ -143,7 +149,7 @@ router.post("/", upload.single("cover"), async (req, res) => {
     title: req.body.title,
     publishDate: publishedDate,
     overview: req.body.overview,
-    genre: req.body.genre, // Ito ang Genre ID mula sa dropdown
+    genre: req.body.genre,
     author: req.body.author,
   });
 
@@ -177,7 +183,7 @@ router.get("/:id/edit", async (req, res) => {
   }
 });
 // ===================================================================
-// 6. PUT /books/:id (Update Book Route)
+// 5. PUT /books/:id (Update Book Route)
 // ===================================================================
 
 router.put("/:id", upload.single("cover"), async (req, res) => {
@@ -191,7 +197,6 @@ router.put("/:id", upload.single("cover"), async (req, res) => {
     book.genre = req.body.genre;
     book.publishDate = new Date(req.body.publishDate);
 
-    // 💡 I-handle ang bagong cover image (optional sa update)
     if (req.file != null) {
       book.coverImage = req.file.buffer;
       book.coverImageType = req.file.mimetype;
@@ -209,7 +214,7 @@ router.put("/:id", upload.single("cover"), async (req, res) => {
 });
 
 // ===================================================================
-// 7. DELETE /books/:id (Delete Book Route)
+// 6. DELETE /books/:id (Delete Book Route)
 // ===================================================================
 
 router.delete("/:id", async (req, res) => {
@@ -217,31 +222,31 @@ router.delete("/:id", async (req, res) => {
   try {
     book = await Book.findById(req.params.id);
     await book.deleteOne();
-    // 💡 Redirect sa Index Page (All Books)
     res.redirect("/books");
   } catch (err) {
     if (book == null) {
       res.redirect("/");
     } else {
-      // Kung may error, bumalik sa Show Page
       res.redirect(`/books/${book.id}`);
     }
   }
 });
 // ===================================================================
-// 5. GET /books/:id (Show Book Details Route)
+// 7. GET /books/:id (Show Book Details Route)
 // ===================================================================
 
 router.get("/:id", async (req, res) => {
   try {
-    const book = await Book.findById(req.params.id).populate("genre").exec();
-    // 💡 Safety Check: Kung deleted na
-    if (book == null) {
-      return res.redirect("/books");
-    }
+    const book = await Book.findById(req.params.id)
+      .populate("author")
+      .populate("genre")
+      .select("+coverImage +coverImageType")
+      .exec();
+
     res.render("books/show", { book: book });
-  } catch {
-    res.redirect("/books");
+  } catch (err) {
+    console.error(err);
+    res.redirect("/");
   }
 });
 

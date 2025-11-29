@@ -1,4 +1,3 @@
-// models/book.js (Ang Dating Code mo)
 const mongoose = require("mongoose");
 const Genre = require("./genre");
 
@@ -39,15 +38,13 @@ const bookSchema = new mongoose.Schema(
   }
 );
 
-// 💡 BAGONG CODE: Virtual Property para sa Cover Image URL
 bookSchema.virtual("coverImagePath").get(function () {
   if (this.coverImage != null && this.coverImageType != null) {
-    // Iko-convert ang binary data (Buffer) sa Base64 string
     return `data:${
       this.coverImageType
     };charset=utf-8;base64,${this.coverImage.toString("base64")}`;
   }
-  return null; // Walang image
+  return null;
 });
 
 module.exports = mongoose.model("Book", bookSchema);
