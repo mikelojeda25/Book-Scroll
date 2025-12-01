@@ -10,7 +10,7 @@ const bookSchema = new mongoose.Schema(
     overview: {
       type: String,
     },
-    //Genre ID (Referencing)
+    //Genre ID (Referencing) - MERRY CHRISTMAS!
     genre: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
